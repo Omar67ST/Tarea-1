@@ -170,7 +170,4 @@ Red neuronal ejecutada correctamente.
 
 ## Autores
 
-| Nombre | Código |
-|---|---|
-| [Nombre del integrante 1] | [Código] |
-| [Nombre del integrante 2] | [Código] |
+Omar Sotelo Cusi - Progra3
