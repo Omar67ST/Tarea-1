@@ -234,53 +234,53 @@ public:
 
     // Suma con broadcast de bias (N x cols) + (1 x cols)
     Tensor addBias(const Tensor& bias) const {
-        if (shape.size() != 2 || bias.shape.size() != 2)
+        if (shape.size() != 2 || bias.shape.size() != 2) //Verifica que ambos sean tensores 2D
             throw runtime_error("addBias solo soporta tensores 2D.");
-        size_t rows = shape[0];
-        size_t cols = shape[1];
-        if (bias.shape[0] != 1 || bias.shape[1] != cols)
+        size_t rows = shape[0]; //Numero de filas del tensor principal
+        size_t cols = shape[1]; //Numero de columnas del tensor principal
+        if (bias.shape[0] != 1 || bias.shape[1] != cols) //Verifica que el bias sea de forma {1, cols}
             throw runtime_error("El bias debe tener forma {1, cols}.");
-        vector<double> res(total_size);
-        for (size_t i = 0; i < rows; ++i)
-            for (size_t j = 0; j < cols; ++j)
-                res[i * cols + j] = data[i * cols + j] + bias.data[j];
-        return Tensor(shape, res);
+        vector<double> res(total_size); //Crea vector para el resultado
+        for (size_t i = 0; i < rows; ++i) //Recorre fil o rows
+            for (size_t j = 0; j < cols; ++j) //Recorre cols
+                res[i * cols + j] = data[i * cols + j] + bias.data[j]; //Suma el bias a cada elemento de la fila
+        return Tensor(shape, res); //Retorna el tensor con el bias sumado
     }
 
     // METODO DE APLICACION EN CLASE TENSOR (POLIMORFISMO)
     Tensor apply(const TensorTransform& transform) const {
-        return transform.apply(*this);
+        return transform.apply(*this); //Llama al apply de la transformacion (ReLU o Sigmoid) pasando este tensor
     }
 
     void print() const {
-        cout << "Tensor(shape={";
-        for (size_t i = 0; i < shape.size(); ++i)
-            cout << shape[i] << (i + 1 < shape.size() ? ", " : "");
+        cout << "Tensor(shape={"; //Imprime la etiqueta inicial
+        for (size_t i = 0; i < shape.size(); ++i) //Recorre cada dimension
+            cout << shape[i] << (i + 1 < shape.size() ? ", " : ""); //Imprime la dimension
         cout << "}):" << endl;
-        for (size_t i = 0; i < total_size; ++i) {
+        for (size_t i = 0; i < total_size; ++i) { //Recorre cada elemento
             cout << setw(6) << fixed << setprecision(2) << data[i] << " ";
-            if (shape.size() > 1 && (i + 1) % shape.back() == 0)
-                cout << endl;
+            if (shape.size() > 1 && (i + 1) % shape.back() == 0) //Termina en una fila (Tensores 2D Y 3D)
+                cout << endl; //salto de linea
         }
         cout << endl;
     }
 
-    // Imprime solo las primeras n filas (util para tensores grandes)
+    // Imprime solo las primeras n filas
     void printRows(size_t n) const {
-        if (shape.size() != 2) { print(); return; }
-        size_t cols = shape[1];
-        size_t rows_to_print = min(n, shape[0]);
+        if (shape.size() != 2) { print(); return; } //Si no es 2D usa print() normal y sale
+        size_t cols = shape[1];  //Numero de columnas
+        size_t rows_to_print = min(n, shape[0]); //Cuantas filas va imprimir
         cout << "Tensor(shape={" << shape[0] << ", " << cols << "}) - primeras " << rows_to_print << " filas:" << endl;
-        for (size_t i = 0; i < rows_to_print; ++i) {
-            for (size_t j = 0; j < cols; ++j)
+        for (size_t i = 0; i < rows_to_print; ++i) { //Recorre las filas a imprimir
+            for (size_t j = 0; j < cols; ++j) //Recorre cada columna
                 cout << setw(6) << fixed << setprecision(4) << data[i * cols + j] << " ";
             cout << endl;
         }
         cout << endl;
     }
 
-    const vector<size_t>& getShape() const { return shape; }
-    size_t getSize() const { return total_size; }
+    const vector<size_t>& getShape() const { return shape; } //Devuelve la forma del tensor
+    size_t getSize() const { return total_size; } //Devuelve la cantidad total de elementos
 };
 
 //Implelentacion de clases derivadas (clases hijas)
@@ -306,34 +306,34 @@ public:
     }
 };
 
-// Producto punto entre dos tensores del mismo tamano
+// Producto punto entre dos tensores del mismo tamaño
 Tensor dot(const Tensor& a, const Tensor& b) {
-    if (a.shape != b.shape)
+    if (a.shape != b.shape) //Verifica que ambos tengan exactamente la misma forma
         throw runtime_error("Las formas deben coincidir para dot.");
-    double suma = 0.0;
-    for (size_t i = 0; i < a.total_size; ++i)
-        suma += a.data[i] * b.data[i];
-    return Tensor({1}, {suma});
+    double suma = 0.0; //Acumulador para la suma de productos
+    for (size_t i = 0; i < a.total_size; ++i)  //Recorre cada elemento
+        suma += a.data[i] * b.data[i]; //Multiplica los elementos en la misma posicion y los acumula en suma
+    return Tensor({1}, {suma});  //Retorna un tensor de 1 elemento con el resultado
 }
 
 // Multiplicacion de matrices 2D: A (m x k) * B (k x n) = C (m x n)
 Tensor matmul(const Tensor& a, const Tensor& b) {
-    if (a.shape.size() != 2 || b.shape.size() != 2)
+    if (a.shape.size() != 2 || b.shape.size() != 2) //Que sea 2D
         throw runtime_error("matmul solo acepta tensores 2D.");
-    if (a.shape[1] != b.shape[0])
+    if (a.shape[1] != b.shape[0]) //verifica que las columnas de A == filas de B
         throw runtime_error("Columnas de A deben coincidir con filas de B.");
 
-    size_t rows  = a.shape[0];
-    size_t inner = a.shape[1];
-    size_t cols  = b.shape[1];
+    size_t rows  = a.shape[0]; //Filas del resultado
+    size_t inner = a.shape[1]; //Dimension compartida (cols A = rows B)
+    size_t cols  = b.shape[1]; //Columnas del resultado
 
-    vector<double> res(rows * cols, 0.0);
-    for (size_t i = 0; i < rows; ++i)
-        for (size_t j = 0; j < cols; ++j)
-            for (size_t k = 0; k < inner; ++k)
-                res[i * cols + j] += a.data[i * inner + k] * b.data[k * cols + j];
+    vector<double> res(rows * cols, 0.0); //Crea vector resultado inicializado en ceros
+    for (size_t i = 0; i < rows; ++i) //Recorre cada fila
+        for (size_t j = 0; j < cols; ++j)  //Recorre cada columna
+            for (size_t k = 0; k < inner; ++k) //Recorre la dimension
+                res[i * cols + j] += a.data[i * inner + k] * b.data[k * cols + j]; //Acumula el producto para la celda (i,j)
 
-    return Tensor({rows, cols}, res);
+    return Tensor({rows, cols}, res); //Retorna la matriz resultado de dimensiones (rows x cols)
 }
 
 int main() {
